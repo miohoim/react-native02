@@ -7,25 +7,79 @@
 import React, { Component } from 'react';
 import {
   AppRegistry,
+  compornent,
+  Image,
+  ListView,
   StyleSheet,
   Text,
   View
 } from 'react-native';
 
+var ACCESS_TOKEN = '';
+var API_URL = 'https://api.instagram.com/vi';
+var PARAMS = '/users/self/media/recent/?access_token=' + ACCESS_TOKEN;
+var INSTAGRAM_REQUEST_URL = API_URL + PARAMS;
+
 export default class AwesomeProject extends Component {
-  render() {
+  constructor(props){
+    super(props);
+    this.state = {
+      dataSource : new ListView.DataSource({
+        rowHasChanged: (row1,row2) => row1 !== row2,}),
+        loaded : false,
+    };
+  }
+
+  compornentDidMount(){
+    this.fetchData();
+  }
+
+  fetchData(){
+    fetch(INSTAGRAM_REQUEST_URL)
+    .then((response) => response.json())
+    .then((responseData) => {
+      this.setState({
+        dataSource: this.state.dataSource.cloneWithRows(responseData.data),
+        loaded: true,
+      });
+    })
+    .done();
+  }
+
+  render(){
+    if(!this.state.loaded){
+      return this.renderLoadingView();
+    }
+    return(
+      <ListView 
+        dataSource={this.state.dataSource}
+        renderRow={this.renderMovie}
+        style={styles.listView}
+      />
+    );
+  }
+
+  renderLoadingView() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          やったね！ React Native!
+        <Text>
+          Loading Photos ...
         </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
+      </View>
+    );
+  }
+
+  renderMovie(feed){
+    return(
+      <View style={styles.container}>
+        <Image
+          source={{uri: feed.images.thumbnail.url}}
+          style={styles.thumbnail}
+        />
+        <View style={styles.rightContainer}>
+          <Text style={styles.title}>{feed.caption.text}</Text>
+          <Text style={styles.year}>{feed.caption.created_time}</Text>
+        </View>
       </View>
     );
   }
@@ -34,20 +88,31 @@ export default class AwesomeProject extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'pink',
+    backgroundColor: '#F5FCFF',
   },
-  welcome: {
-    fontSize: 20,
+  thumbnail:{
+    width: 150,
+    height: 150,
+  },
+  rightContainer:{
+    flex: 1,
+  },
+  title: {
+    fontSize: 13,
+    marginBottom: 8,
     textAlign: 'center',
-    margin: 10,
   },
-  instructions: {
+  year: {
+    fontSize :13,
     textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
   },
+  listView: {
+    paddingTop: 20,
+    backgroundColor: '#F5FCFF',
+  }
 });
 
 AppRegistry.registerComponent('AwesomeProject', () => AwesomeProject);
